@@ -19,7 +19,7 @@
 
     <div id="auth-section" class="text-center">
       <p class="mb-2">Log in om IVAR te gebruiken:</p>
-      <button id="login-btn" class="bg-indigo-600 text-white px-4 py-2 rounded">Log in met Google</button>
+      <button id="login-btn" class="bg-indigo-600 text-white px-4 py-2 rounded">🔐 Log in met Google</button>
     </div>
 
     <div id="chat-section" class="hidden flex flex-col space-y-4">
@@ -33,7 +33,6 @@
   </div>
 
   <script>
-    // 🔑 Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBTwCREcXqY_B_amU4yMZmIhn9a2WxfDto",
       authDomain: "ai-bot-f8b5f.firebaseapp.com",
@@ -43,11 +42,9 @@
       appId: "1:413591691577:web:f5e28ecf2811a819a9c8e8"
     };
 
-    // 🔥 Init Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // 🔐 Login
     const loginBtn = document.getElementById("login-btn");
     const logoutBtn = document.getElementById("logout-btn");
     const authSection = document.getElementById("auth-section");
@@ -64,17 +61,16 @@
 
     auth.onAuthStateChanged(user => {
       if (user) {
-        authSection.classList.add("hidden");
-        chatSection.classList.remove("hidden");
+        authSection.style.display = "none";
+        chatSection.style.display = "flex";
         addMessage(`Welkom terug, ${user.displayName || user.email}!`, "bot");
       } else {
-        authSection.classList.remove("hidden");
-        chatSection.classList.add("hidden");
+        authSection.style.display = "block";
+        chatSection.style.display = "none";
         document.getElementById("chat").innerHTML = "";
       }
     });
 
-    // 🤖 IVAR AI
     const API_KEY = "AIzaSyDYCpPo7jRa8vJDbH3P5R1eopFo5koGPAo";
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
 
