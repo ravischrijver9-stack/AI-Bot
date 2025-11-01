@@ -4,6 +4,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IVAR — Jouw AI Chatbot</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <style>
     body { font-family: sans-serif; background-color: #f4f7f9; }
     .chat-bubble { padding: 0.75rem; margin: 0.5rem 0; border-radius: 0.5rem; max-width: 80%; }
@@ -14,15 +16,66 @@
 <body class="p-6">
   <div class="max-w-xl mx-auto bg-white p-6 rounded shadow flex flex-col space-y-4">
     <h1 class="text-2xl font-bold text-center text-indigo-700">IVAR — Jouw AI Chatbot</h1>
-    <div id="chat" class="flex flex-col space-y-2 overflow-y-auto h-96 border p-4 rounded bg-gray-50"></div>
-    <div class="flex space-x-2">
-      <input id="input" type="text" placeholder="Typ je vraag..." class="flex-1 border p-2 rounded" />
-      <button id="send" class="bg-indigo-600 text-white px-4 py-2 rounded">Verstuur</button>
+
+    <div id="auth-section" class="text-center">
+      <p class="mb-2">Log in om IVAR te gebruiken:</p>
+      <button id="login-btn" class="bg-indigo-600 text-white px-4 py-2 rounded">Log in met Google</button>
+    </div>
+
+    <div id="chat-section" class="hidden flex flex-col space-y-4">
+      <div id="chat" class="flex flex-col space-y-2 overflow-y-auto h-96 border p-4 rounded bg-gray-50"></div>
+      <div class="flex space-x-2">
+        <input id="input" type="text" placeholder="Typ je vraag..." class="flex-1 border p-2 rounded" />
+        <button id="send" class="bg-indigo-600 text-white px-4 py-2 rounded">Verstuur</button>
+      </div>
+      <button id="logout-btn" class="text-sm text-red-600 underline self-end">Uitloggen</button>
     </div>
   </div>
 
   <script>
-    const API_KEY = "AIzaSyDYCpPo7jRa8vJDbH3P5R1eopFo5koGPAo"; // ← Jouw sleutel
+    // 🔑 Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTwCREcXqY_B_amU4yMZmIhn9a2WxfDto",
+      authDomain: "ai-bot-f8b5f.firebaseapp.com",
+      projectId: "ai-bot-f8b5f",
+      storageBucket: "ai-bot-f8b5f.appspot.com",
+      messagingSenderId: "413591691577",
+      appId: "1:413591691577:web:f5e28ecf2811a819a9c8e8"
+    };
+
+    // 🔥 Init Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // 🔐 Login
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const authSection = document.getElementById("auth-section");
+    const chatSection = document.getElementById("chat-section");
+
+    loginBtn.addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider);
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut();
+    });
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        authSection.classList.add("hidden");
+        chatSection.classList.remove("hidden");
+        addMessage(`Welkom terug, ${user.displayName || user.email}!`, "bot");
+      } else {
+        authSection.classList.remove("hidden");
+        chatSection.classList.add("hidden");
+        document.getElementById("chat").innerHTML = "";
+      }
+    });
+
+    // 🤖 IVAR AI
+    const API_KEY = "AIzaSyDYCpPo7jRa8vJDbH3P5R1eopFo5koGPAo";
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
 
     const chat = document.getElementById("chat");
@@ -43,7 +96,8 @@
       ivarMemory.push(message);
       const context = ivarMemory.slice(0, -1).join(" | ");
       const prompt = `
-Je bent IVAR, een slimme AI-chatbot die met Ravi praat. Je onthoudt wat hij eerder heeft gezegd: ${context}.
+Je bent IVAR, een slimme AI-chatbot die met ${auth.currentUser?.displayName || "de gebruiker"} praat.
+Je onthoudt wat hij eerder heeft gezegd: ${context}.
 Reageer vriendelijk, slim en creatief. Gebruik hedendaags Nederlands. Geef altijd een inhoudelijk en persoonlijk antwoord.
 Vraag door als iets onduidelijk is.
 Gebruiker zegt: "${message}"
